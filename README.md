@@ -7,7 +7,7 @@ spawn bash connecting stdin stdout and stderr to 127.0.0.1
 
 Transfering files
 * ngo localhost:1337 < file.txt
-Other side (listen)
+<br>Other side (listen)
 * ngo -v -l :1337 > file.txt
 
 # Installation
