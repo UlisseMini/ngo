@@ -22,16 +22,32 @@ func init() {
 }
 
 func main() {
-	conn, err := net.DialTimeout(proto, addr, timeout)
-	mustNot(err)
-	defer conn.Close()
+	var (
+		err  error
+		conn net.Conn
+	)
 
-	// print the connected message (diferent depending on proto)
-	if *udp {
-		Info.Println("Sending to", addr)
+	if !*listen {
+		conn, err = net.DialTimeout(proto, addr, timeout)
+		mustNot(err)
+
+		// print the connected message (diferent depending on proto)
+		if *udp {
+			Info.Println("Sending to", addr)
+		} else {
+			Info.Println("Connected to", addr)
+		}
 	} else {
-		Info.Println("Connected to", addr)
+		// listening
+		l, err := net.Listen(proto, addr)
+		mustNot(err)
+
+		Info.Printf("Listening on %s", addr)
+		conn, err = l.Accept()
+		Info.Printf("Connection from %s", conn.RemoteAddr().String())
+		mustNot(err)
 	}
+	defer conn.Close()
 
 	// if there is a command to execute over the conn
 	if *cmdStr != "" {
