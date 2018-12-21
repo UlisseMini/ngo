@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/UlisseMini/ngo/exec"
+	"github.com/UlisseMini/utils/cmd"
 	"io"
 	"net"
 	"os"
-	"utils/bg"
-	"utils/cmd"
 )
 
 func init() {
@@ -52,7 +52,7 @@ func main() {
 	// if there is a command to execute over the conn
 	if *cmdStr != "" {
 		cmd := cmd.Parse(*cmdStr)
-		err := bg.Spawn(cmd, conn)
+		err := exec.Spawn(conn, cmd)
 		errPrint(err)
 		return
 	}
