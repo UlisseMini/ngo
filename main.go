@@ -1,9 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/UlisseMini/ngo/exec"
 	"github.com/UlisseMini/utils/cmd"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"os"
@@ -11,54 +13,71 @@ import (
 
 func init() {
 	// Parse commandline arguments (argsparser.go)
-	err := ParseArgs()
+	err := parseArgs()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	// initalize loggers (logging.go)
-	InitLoggers()
 }
 
 func main() {
+	conn, err := connect()
+	mustNot(err)
+
+	handleConn(conn)
+}
+
+// connect will connect to the correct host using the correct settings
+func connect() (net.Conn, error) {
 	var (
 		err  error
 		conn net.Conn
 	)
 
 	if !*listen {
+		if *ssl {
+			// connect with ssl / tls
+			config := &tls.Config{InsecureSkipVerify: true}
+			conn, err := tls.Dial(proto, addr, config)
+			if err != nil {
+				return nil, err
+			}
+			return conn, nil
+		}
 		conn, err = net.DialTimeout(proto, addr, timeout)
-		mustNot(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// print the connected message (diferent depending on proto)
 		if *udp {
-			Info.Println("Sending to", addr)
+			log.Info("Sending to", addr)
 		} else {
-			Info.Println("Connected to", addr)
+			log.Info("Connected to", addr)
 		}
 	} else {
 		// listening
 		l, err := net.Listen(proto, addr)
-		mustNot(err)
+		if err != nil {
+			return nil, err
+		}
 
-		Info.Printf("Listening on %s", addr)
+		log.Infof("Listening on %s", addr)
 		conn, err = l.Accept()
-		Info.Printf("Connection from %s", conn.RemoteAddr().String())
-		mustNot(err)
+		log.Infof("Connection from %s", conn.RemoteAddr().String())
+		if err != nil {
+			return nil, err
+		}
+
 	}
-	defer conn.Close()
 
 	// if there is a command to execute over the conn
 	if *cmdStr != "" {
 		cmd := cmd.Parse(*cmdStr)
-		err := exec.Spawn(conn, cmd)
-		errPrint(err)
-		return
+		exec.Spawn(conn, cmd)
 	}
 
-	// otherwise use default
-	handleConn(conn)
+	return conn, nil
 }
 
 // handleConn connects the two connections file descriptors.
@@ -70,7 +89,7 @@ func handleConn(conn net.Conn) {
 		n, err := io.Copy(os.Stdout, conn)
 		errPrint(err)
 
-		Debug.Printf("Read %d bytes\n", n)
+		log.Debugf("Read %d bytes\n", n)
 		done <- struct{}{}
 	}()
 
@@ -79,7 +98,7 @@ func handleConn(conn net.Conn) {
 		n, err := io.Copy(conn, os.Stdin)
 		errPrint(err)
 
-		Debug.Printf("Wrote %d bytes\n", n)
+		log.Debugf("Wrote %d bytes\n", n)
 		done <- struct{}{}
 	}()
 
@@ -91,14 +110,14 @@ func handleConn(conn net.Conn) {
 // if the error is not nil
 func errPrint(err error) {
 	if err != nil {
-		Error.Println(err)
+		log.Error(err)
 	}
 }
 
 // mustNot prints and exits the program on error.
 func mustNot(err error) {
 	if err != nil {
-		Error.Println(err)
+		log.Error(err)
 		os.Exit(1)
 	}
 }
