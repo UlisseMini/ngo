@@ -2,11 +2,16 @@
 
 package exec
 
+import (
+	"io"
+	"os/exec"
+)
+
 // Spawn will spawn cmd over conn (full pty not supported yet on windows)
-func Spawn(conn net.Conn, cmd *exec.Cmd) error {
-	cmd.Stdout = conn
-	cmd.Stderr = conn
-	cmd.Stdin = conn
+func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) error {
+	cmd.Stdout = readwriter
+	cmd.Stderr = readwriter
+	cmd.Stdin = readwriter
 
 	cmd.Run()
 
