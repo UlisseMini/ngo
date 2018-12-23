@@ -20,7 +20,8 @@ For the full help run
 Download the binary for your system from the releases
 
 # Building from source
-Run `go mod download`, then `go build` and `go install` should work.
+First `go get github.com/UlisseMini/ngo` then cd into the directory and run `make`
+<br>then the binaries will be installed into ngo/bin, to install into your $GOBIN do `make depends` then `go install`
 
 # Bugs
 * Using the -e option holds up the socket even after the process exits (windows)
