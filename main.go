@@ -3,7 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/UlisseMini/ngo/exec"
+	"github.com/UlisseMini/ngo/internal/aes"
+	"github.com/UlisseMini/ngo/internal/exec"
 	"github.com/UlisseMini/utils/cmd"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -24,7 +25,24 @@ func main() {
 	conn, err := connect()
 	mustNot(err)
 
-	handleConn(conn)
+	var rw io.ReadWriter
+	// encrypt the connection with AES (if needs be)
+	if *aesKey != "" {
+		rw, err = aes.NewReadWriter(conn, *aesKey)
+		mustNot(err)
+	}
+
+	// if there is a command to execute over the connection
+	if *cmdStr != "" {
+		log.Infof("executing: %q over the connection", *cmdStr)
+		cmd := cmd.Parse(*cmdStr)
+		exec.Spawn(rw, cmd)
+	}
+
+	func() {
+		defer conn.Close()
+		handleConn(rw)
+	}()
 }
 
 // connect will connect to the correct host using the correct settings
@@ -71,17 +89,11 @@ func connect() (net.Conn, error) {
 
 	}
 
-	// if there is a command to execute over the conn
-	if *cmdStr != "" {
-		cmd := cmd.Parse(*cmdStr)
-		exec.Spawn(conn, cmd)
-	}
-
 	return conn, nil
 }
 
 // handleConn connects the two connections file descriptors.
-func handleConn(conn net.Conn) {
+func handleConn(conn io.ReadWriter) {
 	done := make(chan struct{})
 
 	// connect conn to stdout

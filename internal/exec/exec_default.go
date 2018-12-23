@@ -6,7 +6,6 @@ package exec
 
 import (
 	"io"
-	"net"
 	"os"
 	"os/exec"
 
@@ -16,8 +15,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// Spawn will spawn cmd over conn (full pty not supported yet on windows)
-func Spawn(conn net.Conn, cmd *exec.Cmd) error {
+// Spawn will spawn cmd over readwriter (full pty not supported yet on windows)
+func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) error {
 	f, err := pty.Start(cmd)
 	if err != nil {
 		return err
@@ -35,8 +34,8 @@ func Spawn(conn net.Conn, cmd *exec.Cmd) error {
 	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
 
 	// Copy stdin to the pty and the pty to stdout.
-	go io.Copy(f, conn)
-	io.Copy(conn, f)
+	go io.Copy(f, readwriter)
+	io.Copy(readwriter, f)
 
 	return nil
 }
