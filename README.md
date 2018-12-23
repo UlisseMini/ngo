@@ -1,24 +1,30 @@
 # Usage & examples
-for basic usage do
-* ngo -h
-
 spawn bash connecting stdin stdout and stderr to 127.0.0.1
 * ngo -e "bash -li" 127.0.0.1:1337
 
 Transfering files
 * ngo localhost:1337 < file.txt
 <br>Other side (listen)
-* ngo -v -l :1337 > file.txt
+* ngo -l :1337 > file.txt
+<br><br>
+AES encrypted connections,
+* ngo -a foobar localhost:1337
+Where "foobar" is your encryption key<br>
+* ngo -a foobar -l :1337
+Same thing except listen instead of connect<br><br>
+
+For the full help run
+* ngo -h
 
 # Installation
 Download the binary for your system from the releases
 
 # Building from source
-You'll need my [utils packages](https://github.com/UlisseMini/utils) then a simple `go build` or `go install` should work :D
+Run `go mod download`, then `go build` and `go install` should work.
 
 # Bugs
 * Using the -e option holds up the socket even after the process exits (windows)
-* failure to resize pty
+* failure to resize pty (wants \*os.File)
 
 # TODO
 * Find a better args parser (you can't mix args with flags with the flag package)
