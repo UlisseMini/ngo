@@ -22,9 +22,8 @@ type Packet struct {
 	// Data holds the encrypted data
 	Data []byte
 
-	// The initalizeation vector and nonce do not need to be kept secret,
-	// they must be shared for the remote end to decrypt our data
-	IV    []byte
+	// nonce does not need to be kept secret,
+	// it needs to be shared for the remote end to decrypt our data
 	Nonce []byte
 }
 
