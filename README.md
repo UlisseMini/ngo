@@ -7,7 +7,7 @@ Transfering files
 <br>Other side (listen)
 * ngo -l :1337 > file.txt
 <br>
-AES encrypted connections,
+AES encrypted connections,<br>
 * ngo -a foobar localhost:1337
 Where "foobar" is your encryption key<br>
 * ngo -a foobar -l :1337
