@@ -25,18 +25,24 @@ func main() {
 	conn, err := connect()
 	mustNot(err)
 
-	var rw io.ReadWriter
+	var rw io.ReadWriter = io.ReadWriter(conn)
 	// encrypt the connection with AES (if needs be)
 	if *aesKey != "" {
+		log.Tracef("AES mode enabled key: %s", *aesKey)
 		rw, err = aes.NewReadWriter(conn, *aesKey)
 		mustNot(err)
 	}
+
+	// For debuging
+	log.Debugf("conn: %#v", conn)
+	log.Debugf("rw: %#v", rw)
 
 	// if there is a command to execute over the connection
 	if *cmdStr != "" {
 		log.Infof("executing: %q over the connection", *cmdStr)
 		cmd := cmd.Parse(*cmdStr)
 		exec.Spawn(rw, cmd)
+		return
 	}
 
 	func() {
@@ -75,6 +81,10 @@ func connect() (net.Conn, error) {
 		}
 	} else {
 		// listening
+		if *ssl {
+			return nil, fmt.Errorf("--ssl for listen mode is not implemented yet.")
+		}
+
 		l, err := net.Listen(proto, addr)
 		if err != nil {
 			return nil, err
@@ -86,15 +96,14 @@ func connect() (net.Conn, error) {
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
 	return conn, nil
 }
 
 // handleConn connects the two connections file descriptors.
-func handleConn(conn io.ReadWriter) {
-	done := make(chan struct{})
+func handleConn(conn io.ReadWriter) (err error) {
+	done := make(chan error)
 
 	// connect conn to stdout
 	go func() {
@@ -102,7 +111,7 @@ func handleConn(conn io.ReadWriter) {
 		errPrint(err)
 
 		log.Debugf("Read %d bytes\n", n)
-		done <- struct{}{}
+		done <- err
 	}()
 
 	// connect stdin to conn
@@ -111,11 +120,11 @@ func handleConn(conn io.ReadWriter) {
 		errPrint(err)
 
 		log.Debugf("Wrote %d bytes\n", n)
-		done <- struct{}{}
+		done <- err
 	}()
 
 	// wait for one of the goroutines to finish
-	<-done
+	return <-done
 }
 
 // errPrint prints an error using the Error logger

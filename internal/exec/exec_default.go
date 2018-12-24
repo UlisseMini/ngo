@@ -16,13 +16,11 @@ import (
 )
 
 // Spawn will spawn cmd over readwriter (full pty not supported yet on windows)
-func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) error {
+func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) (err error) {
 	f, err := pty.Start(cmd)
 	if err != nil {
 		return err
 	}
-
-	defer f.Close()
 
 	// Set stdin in raw mode.
 	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
@@ -33,9 +31,18 @@ func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) error {
 	// Remove raw mode after
 	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
 
-	// Copy stdin to the pty and the pty to stdout.
-	go io.Copy(f, readwriter)
-	io.Copy(readwriter, f)
+	// Copy stdin to the pty and the pty to stdout
+	done := make(chan error)
+	go func() {
+		_, err = io.Copy(f, readwriter)
+		done <- err
+	}()
 
-	return nil
+	go func() {
+		_, err = io.Copy(readwriter, f)
+		done <- err
+	}()
+
+	// wait for one of them to finish then return possible error
+	return <-done
 }

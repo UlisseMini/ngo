@@ -26,9 +26,11 @@ First `go get github.com/UlisseMini/ngo` then cd into the directory and run `mak
 # Bugs
 * Using the -e option holds up the socket even after the process exits (windows)
 * failure to resize pty (wants \*os.File)
+* Listening as raw and sending with aes causes a panic on the listening side
+* Listening with --ssl not supported yet.
 
 # TODO
-* Find a better args parser (you can't mix args with flags with the flag package)
 * Allow for giving port and ip in other format (besides ip:port)
 * ssl options --ssl-key --ssl-cert --ssl etc (maybe create cert auth for ngo?)
 * pty support for windows
+* Better argument parsing

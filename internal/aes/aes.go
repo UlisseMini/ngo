@@ -40,7 +40,8 @@ type readWriter struct {
 // The readWriter method
 // TODO:
 // * Correctly return number of bytes written, currently just returns zero.
-func (self *readWriter) Write(data []byte) (n int, err error) {
+func (self readWriter) Write(data []byte) (n int, err error) {
+	log.Trace("AES: Write called")
 	// First Get the nonce
 	nonce := make([]byte, 12)
 	_, err = io.ReadFull(rand.Reader, nonce)
@@ -66,10 +67,11 @@ func (self *readWriter) Write(data []byte) (n int, err error) {
 		return n, err
 	}
 
-	return len(data), err
+	return len(data), nil
 }
 
-func (self *readWriter) Read(data []byte) (n int, err error) {
+func (self readWriter) Read(data []byte) (n int, err error) {
+	log.Trace("AES: Read called")
 	p := &Packet{}
 	log.Tracef("err = self.decoder.Decode(p)")
 	err = self.decoder.Decode(p)
@@ -92,6 +94,7 @@ func (self *readWriter) Read(data []byte) (n int, err error) {
 // TODO:
 // Make into a readwriter and change the name.
 func NewReadWriter(rw io.ReadWriter, k string) (io.ReadWriter, error) {
+	log.Trace("AES: NewReadWriter called")
 	// compute the hash of the key, this will make it the correct length
 	keyBytes := []byte(k)
 	key := sha256.Sum256(keyBytes[:])
