@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/UlisseMini/ngo/internal/aes"
 	"github.com/UlisseMini/ngo/internal/exec"
+	"github.com/UlisseMini/ngo/internal/tlsconfig"
 	"github.com/UlisseMini/utils/cmd"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"os"
 )
+
+const hostname = "ngo"
 
 func init() {
 	// Parse commandline arguments (argsparser.go)
@@ -32,10 +35,6 @@ func main() {
 		rw, err = aes.NewReadWriter(conn, *aesKey)
 		mustNot(err)
 	}
-
-	// For debuging
-	log.Debugf("conn: %#v", conn)
-	log.Debugf("rw: %#v", rw)
 
 	// if there is a command to execute over the connection
 	if *cmdStr != "" {
@@ -81,13 +80,23 @@ func connect() (net.Conn, error) {
 		}
 	} else {
 		// listening
+		var l net.Listener
 		if *ssl {
-			return nil, fmt.Errorf("--ssl for listen mode is not implemented yet.")
-		}
+			config, err := tlsconfig.Get(hostname)
+			if err != nil {
+				return nil, err
+			}
 
-		l, err := net.Listen(proto, addr)
-		if err != nil {
-			return nil, err
+			l, err = tls.Listen(proto, addr, config)
+			if err != nil {
+				return nil, err
+			}
+
+		} else {
+			l, err = net.Listen(proto, addr)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		log.Infof("Listening on %s", addr)
