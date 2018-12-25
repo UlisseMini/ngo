@@ -8,7 +8,9 @@ import (
 	"github.com/UlisseMini/ngo/internal/aes"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
+	"io"
 
+	"os"
 	"time"
 )
 
@@ -27,14 +29,24 @@ var (
 		"run command and redirect file descriptors to the connection")
 	aesKey *string = flag.StringP("aes", "a", "",
 		"encrypt the connection using a key and AES")
+)
 
-	// parsed options
+type config struct {
 	addr    string
 	proto   string
 	timeout time.Duration
-)
 
-func parseArgs() error {
+	aesKey string
+
+	// file descriptors to be connected to the connection.
+	in  io.Reader
+	out io.Writer
+}
+
+func parseArgs() (config, error) {
+	// instance of config
+	conf := config{}
+
 	// manage aes flag
 	defaultKey := `Not entering an AES key is very bad, luckly ngo is smarter then you`
 	flag.Lookup("aes").NoOptDefVal = defaultKey
@@ -42,22 +54,26 @@ func parseArgs() error {
 	flag.Parse()
 	// TODO allow them to supply in another format other then ip:port
 	if len(flag.Args()) != 1 {
-		return errors.New("You must specify a host to connect to")
+		return config{}, errors.New("You must specify a host to connect to")
 	}
 
 	// set addr to the first argument
-	addr = flag.Arg(0)
-	proto = "tcp"
+	conf.addr = flag.Arg(0)
+	conf.proto = "tcp"
 	if *udp == true {
-		proto = "udp"
+		conf.proto = "udp"
 	}
 
 	// set the dial timeout
-	timeout = time.Duration(*timeoutFlag) * time.Second
+	conf.timeout = time.Duration(*timeoutFlag) * time.Second
 
 	// set the logging levels
 	log.SetLevel(log.Level(*debugLevel))
 	aes.SetLoggingLevel(*debugLevel)
 
-	return nil
+	// set in and out to the default file descriptors
+	conf.in = os.Stdin
+	conf.out = os.Stdout
+
+	return conf, nil
 }
