@@ -14,29 +14,17 @@ import (
 	"time"
 )
 
-var (
-	// on/off options
-	listen *bool = flag.BoolP("listen", "l", false, "listen for connections")
-	udp    *bool = flag.BoolP("udp", "u", false, "use udp instead of tcp")
-	ssl    *bool = flag.Bool("ssl", false, "enable ssl [WARNING NO HOST VERIFICATION]")
-
-	// int options
-	timeoutFlag *int  = flag.IntP("timeout", "t", 10, "connection timeout in seconds")
-	debugLevel  *uint = flag.UintP("debug", "d", 4, "logging level 0-6")
-
-	// handled in main.go
-	cmdStr *string = flag.StringP("exec", "e", "",
-		"run command and redirect file descriptors to the connection")
-	aesKey *string = flag.StringP("aes", "a", "",
-		"encrypt the connection using a key and AES")
-)
-
 type config struct {
+	listen bool
+	udp    bool
+	ssl    bool
+
 	addr    string
 	proto   string
 	timeout time.Duration
 
 	aesKey string
+	cmdStr string
 
 	// file descriptors to be connected to the connection.
 	in  io.Reader
@@ -44,6 +32,23 @@ type config struct {
 }
 
 func parseArgs() (config, error) {
+	var (
+		// on/off options
+		listen *bool = flag.BoolP("listen", "l", false, "listen for connections")
+		udp    *bool = flag.BoolP("udp", "u", false, "use udp instead of tcp")
+		ssl    *bool = flag.Bool("ssl", false, "enable ssl [WARNING NO HOST VERIFICATION]")
+
+		// int options
+		timeoutFlag *int  = flag.IntP("timeout", "t", 10, "connection timeout in seconds")
+		debugLevel  *uint = flag.UintP("debug", "d", 4, "logging level 0-6")
+
+		// handled in main.go
+		cmdStr *string = flag.StringP("exec", "e", "",
+			"run command and redirect file descriptors to the connection")
+		aesKey *string = flag.StringP("aes", "a", "",
+			"encrypt the connection using a key and AES")
+	)
+
 	// instance of config
 	conf := config{}
 
@@ -74,6 +79,12 @@ func parseArgs() (config, error) {
 	// set in and out to the default file descriptors
 	conf.in = os.Stdin
 	conf.out = os.Stdout
+
+	conf.listen = *listen
+	conf.udp = *udp
+	conf.ssl = *ssl
+	conf.cmdStr = *cmdStr
+	conf.aesKey = *aesKey
 
 	return conf, nil
 }

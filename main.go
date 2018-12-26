@@ -29,16 +29,16 @@ func main() {
 
 	var rw io.ReadWriter = io.ReadWriter(conn)
 	// encrypt the connection with AES (if needs be)
-	if *aesKey != "" {
-		log.Tracef("AES mode enabled key: %s", *aesKey)
-		rw, err = aes.NewReadWriter(conn, *aesKey)
+	if conf.aesKey != "" {
+		log.Tracef("AES mode enabled key: %s", conf.aesKey)
+		rw, err = aes.NewReadWriter(conn, conf.aesKey)
 		mustNot(err)
 	}
 
 	// if there is a command to execute over the connection
-	if *cmdStr != "" {
-		log.Infof("executing: %q over the connection", *cmdStr)
-		cmd := cmd.Parse(*cmdStr)
+	if conf.cmdStr != "" {
+		log.Infof("executing: %q over the connection", conf.cmdStr)
+		cmd := cmd.Parse(conf.cmdStr)
 		exec.Spawn(rw, cmd)
 		return
 	}
@@ -57,8 +57,8 @@ func connect(conf config) (net.Conn, error) {
 		conn net.Conn
 	)
 
-	if !*listen {
-		if *ssl {
+	if !conf.listen {
+		if conf.ssl {
 			// connect with ssl / tls
 			tlsconf := &tls.Config{InsecureSkipVerify: true}
 			conn, err := tls.Dial(conf.proto, conf.addr, tlsconf)
@@ -73,15 +73,15 @@ func connect(conf config) (net.Conn, error) {
 		}
 
 		// print the connected message (diferent depending on proto)
-		if *udp {
-			log.Info("Sending to", conf.addr)
+		if conf.udp {
+			log.Infof("Sending to %s", conf.addr)
 		} else {
-			log.Info("Connected to", conf.addr)
+			log.Infof("Connected to %s", conf.addr)
 		}
 	} else {
 		// listening
 		var l net.Listener
-		if *ssl {
+		if conf.ssl {
 			config, err := tlsconfig.Get(hostname)
 			if err != nil {
 				return nil, err
@@ -111,8 +111,7 @@ func connect(conf config) (net.Conn, error) {
 }
 
 // handleConn connects the two connections file descriptors.
-// fd is not a file descriptor, but that is what i'll usually be passing.
-// (except in tests)
+// the i/o file descriptors are in conf
 func handleConn(conf config, conn io.ReadWriter) (err error) {
 	done := make(chan error)
 
@@ -135,7 +134,9 @@ func handleConn(conf config, conn io.ReadWriter) (err error) {
 	}()
 
 	// wait for one of the goroutines to finish
-	return <-done
+	err = <-done
+	log.Debugf("handleConn exiting: %#v", err)
+	return err
 }
 
 // errPrint prints an error using the Error logger
