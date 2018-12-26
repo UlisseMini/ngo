@@ -142,7 +142,7 @@ func Test_connect(t *testing.T) {
 				t.Fatalf("failed to send packet: %v", err)
 			}
 			if n < packetSize {
-				t.Fatalf("n (%d) < packetSize (%d)", n, packetSize)
+				t.Fatalf("send: n (%d) < packetSize (%d)", n, packetSize)
 			}
 		}
 	}
