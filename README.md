@@ -28,6 +28,7 @@ First `go get github.com/UlisseMini/ngo` then cd into the directory and run `mak
 * failure to resize pty (wants \*os.File)
 * Listening as raw and sending with aes causes a panic on the listening side
 * Listening with --ssl not supported yet.
+* timeout option not supported with tls
 
 # TODO
 * Allow for giving port and ip in other format (besides ip:port)
