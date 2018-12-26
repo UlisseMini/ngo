@@ -21,42 +21,50 @@ func init() {
 // Add more test cases
 // Add verification of a correct connection by transmiting a packet back and forth
 func Test_connect(t *testing.T) {
-	testAddr := "127.0.0.1:31893"
-	conf := config{
-		proto:   "tcp",
-		addr:    testAddr,
-		timeout: 1 * time.Second,
+	configs := []config{
+		config{
+			proto:   "tcp",
+			addr:    "127.0.0.1:31893",
+			timeout: 1 * time.Second,
+		},
+		config{
+			proto:   "tcp",
+			addr:    "127.0.0.1:40913",
+			timeout: 1 * time.Second,
+		},
 	}
 
-	errChan := make(chan error, 1)
-	go func() {
-		l, err := net.Listen("tcp", testAddr)
-		if err != nil {
+	for _, conf := range configs {
+		errChan := make(chan error, 1)
+		go func() {
+			l, err := net.Listen(conf.proto, conf.addr)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			defer l.Close()
+
+			conn, err := l.Accept()
+			if err != nil {
+				errChan <- err
+				return
+			}
+			err = conn.Close()
 			errChan <- err
-			return
-		}
-		defer l.Close()
+		}()
 
-		conn, err := l.Accept()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		err = conn.Close()
-		errChan <- err
-	}()
+		select {
+		case err := <-errChan:
+			t.Fatalf("server: %v", err)
+		default:
+			// give the listener time to get ready (should really find better way ;p
+			time.Sleep(10 * time.Millisecond)
 
-	select {
-	case err := <-errChan:
-		t.Fatalf("server: %v", err)
-	default:
-		// give it time to get ready
-		time.Sleep(100 * time.Millisecond)
-
-		conn, err := connect(conf)
-		if err != nil {
-			t.Fatalf("client: %v", err)
+			conn, err := connect(conf)
+			if err != nil {
+				t.Fatalf("client: %v", err)
+			}
+			defer conn.Close()
 		}
-		defer conn.Close()
 	}
 }
