@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/tls"
 	"fmt"
 	"github.com/UlisseMini/ngo/internal/aes"
+	"github.com/UlisseMini/ngo/internal/tlsconfig"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"testing"
@@ -45,16 +47,19 @@ type testcase struct {
 func Test_connect(t *testing.T) {
 	const packetSize = 16 // size of the packet in bytes
 	tt := []testcase{
+		// test connect connecting to us (plain)
 		testcase{
 			conf: config{
 				proto:   "tcp",
 				addr:    "127.0.0.1:31893",
 				timeout: 1 * time.Second,
+				listen:  false,
 			},
 			listen:     true,
 			packetSize: packetSize,
 			packet:     getpkt(packetSize),
 		},
+		// test connect listening (plain)
 		testcase{
 			conf: config{
 				proto:   "tcp",
@@ -63,6 +68,32 @@ func Test_connect(t *testing.T) {
 				listen:  true,
 			},
 			listen:     false,
+			packetSize: packetSize,
+			packet:     getpkt(packetSize),
+		},
+		// test ssl listening \w connect
+		testcase{
+			conf: config{
+				proto:   "tcp",
+				addr:    "127.0.0.1:38103",
+				timeout: 1 * time.Second,
+				listen:  true,
+				ssl:     true,
+			},
+			listen:     false,
+			packetSize: packetSize,
+			packet:     getpkt(packetSize),
+		},
+		// test ssl connecting \w connect
+		testcase{
+			conf: config{
+				proto:   "tcp",
+				addr:    "127.0.0.1:38103",
+				timeout: 1 * time.Second,
+				listen:  false,
+				ssl:     true,
+			},
+			listen:     true,
 			packetSize: packetSize,
 			packet:     getpkt(packetSize),
 		},
@@ -85,11 +116,11 @@ func Test_connect(t *testing.T) {
 		if tc.listen {
 			// listen for the client
 			go listen(tc, errChan)
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		} else {
 			// connect to the client (that is listening)
 			go func() {
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				connectClient(tc, errChan)
 			}()
 		}
@@ -118,7 +149,23 @@ func Test_connect(t *testing.T) {
 }
 
 func listen(tc testcase, errChan chan error) {
-	l, err := net.Listen(tc.conf.proto, tc.conf.addr)
+	var (
+		l   net.Listener
+		err error
+	)
+
+	if tc.conf.ssl {
+		// listen using ssl / tls
+		config, err := tlsconfig.Get(hostname)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		l, err = tls.Listen(tc.conf.proto, tc.conf.addr, config)
+	} else {
+		l, err = net.Listen(tc.conf.proto, tc.conf.addr)
+	}
 	if err != nil {
 		errChan <- err
 		return
@@ -138,8 +185,19 @@ func listen(tc testcase, errChan chan error) {
 	}
 }
 
+// connect to the client listening (connect function)
 func connectClient(tc testcase, errChan chan error) {
-	conn, err := net.DialTimeout(tc.conf.proto, tc.conf.addr, 10*time.Millisecond)
+	var (
+		conn net.Conn
+		err  error
+	)
+
+	if tc.conf.ssl {
+		conn, err = tls.Dial(tc.conf.proto, tc.conf.addr,
+			&tls.Config{InsecureSkipVerify: true})
+	} else {
+		conn, err = net.DialTimeout(tc.conf.proto, tc.conf.addr, 100*time.Millisecond)
+	}
 	if err != nil {
 		errChan <- err
 		return
