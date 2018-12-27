@@ -221,7 +221,7 @@ func readPacket(conn net.Conn, tc testcase) error {
 			n, tc.packetSize)
 	}
 	// now make sure its valid
-	if bytes.Compare(buf, tc.packet) != 0 {
+	if bytes.Equal(buf, tc.packet) {
 		return fmt.Errorf("readPacket: buf (%X) != packet (%X)", buf, tc.packet)
 	}
 
