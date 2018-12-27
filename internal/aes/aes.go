@@ -90,9 +90,7 @@ func (self readWriter) Read(data []byte) (n int, err error) {
 	return n, nil
 }
 
-// NewReadWriter is a high level wrapper that creates an readWriter
-// TODO:
-// Make into a readwriter and change the name.
+// NewReadWriter is a high level wrapper that creates an aes readWriter
 func NewReadWriter(rw io.ReadWriter, k string) (io.ReadWriter, error) {
 	log.Trace("AES: NewReadWriter called")
 	// compute the hash of the key, this will make it the correct length
