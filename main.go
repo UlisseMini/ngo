@@ -27,7 +27,7 @@ func main() {
 	conn, err := connect(conf)
 	mustNot(err)
 
-	var rw io.ReadWriter = io.ReadWriter(conn)
+	rw := io.ReadWriter(conn)
 	// encrypt the connection with AES (if needs be)
 	if conf.aesKey != "" {
 		log.Tracef("AES mode enabled key: %s", conf.aesKey)
