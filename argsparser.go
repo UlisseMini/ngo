@@ -48,6 +48,7 @@ func parseArgs() (config, error) {
 		aesKey *string = flag.StringP("aes", "a", "",
 			"encrypt the connection using a key and AES")
 	)
+	flag.Parse()
 
 	// instance of config
 	conf := config{}
@@ -56,7 +57,6 @@ func parseArgs() (config, error) {
 	defaultKey := `Not entering an AES key is very bad, luckly ngo is smarter then you`
 	flag.Lookup("aes").NoOptDefVal = defaultKey
 
-	flag.Parse()
 	// TODO allow them to supply in another format other then ip:port
 	if len(flag.Args()) != 1 {
 		return config{}, errors.New("You must specify a host to connect to")
