@@ -1,3 +1,5 @@
+# ! ABANDONED ! (just use ncat lmao)
+
 # Usage & examples
 spawn bash connecting stdin stdout and stderr to 127.0.0.1
 * ngo -e "bash -li" 127.0.0.1:1337
