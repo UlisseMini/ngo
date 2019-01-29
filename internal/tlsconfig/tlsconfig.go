@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -16,27 +15,9 @@ import (
 	"time"
 )
 
-// original function used. i could make this faster but i'll leave it for now.
-func publicKey(priv interface{}) interface{} {
-	// i'll only be using ecdsa.PrivateKey, but i'll leave the others for safety
-	switch k := priv.(type) {
-	case *rsa.PrivateKey:
-		return &k.PublicKey
-	case *ecdsa.PrivateKey:
-		return &k.PublicKey
-	default:
-		return nil
-	}
-}
-
 // Get creates a self signed certificate and
 // returns a valid *tls.Config for listening.
 func Get(host string) (*tls.Config, error) {
-	var (
-		validFor = 365 * 24 * time.Hour
-		isCA     = true
-	)
-
 	if len(host) == 0 {
 		return nil, fmt.Errorf("invalid host: %q", host)
 	}
@@ -48,7 +29,7 @@ func Get(host string) (*tls.Config, error) {
 
 	// Manage the time
 	notBefore := time.Now()
-	notAfter := notBefore.Add(validFor)
+	notAfter := notBefore.Add(30 * 24 * time.Hour)
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
@@ -78,12 +59,11 @@ func Get(host string) (*tls.Config, error) {
 		}
 	}
 
-	if isCA {
-		template.IsCA = true
-		template.KeyUsage |= x509.KeyUsageCertSign
-	}
+	template.IsCA = true
+	template.KeyUsage |= x509.KeyUsageCertSign
 
-	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
+	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template,
+		priv.PublicKey, priv)
 	if err != nil {
 		return nil, err
 	}
