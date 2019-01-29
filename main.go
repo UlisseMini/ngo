@@ -3,14 +3,14 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/UlisseMini/ngo/internal/aes"
+	"io"
+	"net"
+	"os"
+
 	"github.com/UlisseMini/ngo/internal/exec"
 	"github.com/UlisseMini/ngo/internal/tlsconfig"
 	"github.com/UlisseMini/utils/cmd"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"net"
-	"os"
 )
 
 const hostname = "ngo"
@@ -28,12 +28,6 @@ func main() {
 	mustNot(err)
 
 	rw := io.ReadWriter(conn)
-	// encrypt the connection with AES (if needs be)
-	if conf.aesKey != "" {
-		log.Tracef("AES mode enabled key: %s", conf.aesKey)
-		rw, err = aes.NewReadWriter(conn, conf.aesKey)
-		mustNot(err)
-	}
 
 	// if there is a command to execute over the connection
 	if conf.cmdStr != "" {
@@ -43,8 +37,8 @@ func main() {
 		return
 	}
 
-	// Don't force handleConn to close the connection, since i can't be
-	// bothered to implement `close` in internal/aes
+	// Don't force handleConn to close the connection, i want to keep it
+	// as flexible as possible
 	func() {
 		defer conn.Close()
 		handleConn(conf, rw)

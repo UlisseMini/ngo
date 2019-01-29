@@ -5,19 +5,18 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"github.com/UlisseMini/ngo/internal/aes"
-	"github.com/UlisseMini/ngo/internal/tlsconfig"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/UlisseMini/ngo/internal/tlsconfig"
+	log "github.com/sirupsen/logrus"
 )
 
 // initalize the tests by disabling logging from the main program.
 func init() {
 	// disable the logging levels
 	log.SetLevel(0)
-	aes.SetLoggingLevel(0)
 }
 
 // getpkt returns a byte array of random bytes
