@@ -62,8 +62,11 @@ func Get(host string) (*tls.Config, error) {
 	template.IsCA = true
 	template.KeyUsage |= x509.KeyUsageCertSign
 
+	pub := &priv.PublicKey
+
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template,
-		priv.PublicKey, priv)
+		pub, priv)
+
 	if err != nil {
 		return nil, err
 	}
