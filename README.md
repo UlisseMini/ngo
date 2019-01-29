@@ -1,5 +1,3 @@
-# ! ABANDONED ! (just use ncat lmao)
-
 # Usage & examples
 spawn bash connecting stdin stdout and stderr to 127.0.0.1
 * ngo -e "bash -li" 127.0.0.1:1337
@@ -9,11 +7,6 @@ Transfering files
 <br>Other side (listen)
 * ngo -l :1337 > file.txt
 <br>
-AES encrypted connections,<br>
-* ngo -a foobar localhost:1337
-Where "foobar" is your encryption key<br>
-* ngo -a foobar -l :1337
-Same thing except listen instead of connect<br><br>
 
 For the full help run
 * ngo -h
