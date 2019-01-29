@@ -35,7 +35,7 @@ func parseArgs() (config, error) {
 		// on/off options
 		listen *bool = flag.BoolP("listen", "l", false, "listen for connections")
 		udp    *bool = flag.BoolP("udp", "u", false, "use udp instead of tcp")
-		ssl    *bool = flag.Bool("ssl", false, "enable ssl [WARNING NO HOST VERIFICATION]")
+		ssl    *bool = flag.Bool("ssl", false, "enable ssl")
 
 		// int options
 		timeoutFlag *int  = flag.IntP("timeout", "t", 10, "connection timeout in seconds")
