@@ -9,7 +9,6 @@ import (
 
 	"github.com/UlisseMini/ngo/internal/exec"
 	"github.com/UlisseMini/ngo/internal/tlsconfig"
-	"github.com/UlisseMini/utils/cmd"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,7 +32,7 @@ func main() {
 	// if there is a command to execute over the connection
 	if conf.cmdStr != "" {
 		log.Infof("executing: %q over the connection", conf.cmdStr)
-		cmd := cmd.Parse(conf.cmdStr)
+		cmd := exec.Parse(conf.cmdStr)
 		exec.Spawn(rw, cmd)
 		return
 	}
