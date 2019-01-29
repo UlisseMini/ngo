@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// hostname for our tls certificate
 const hostname = "ngo"
 
 func main() {
@@ -78,7 +79,7 @@ func connect(conf config) (net.Conn, error) {
 		if conf.ssl {
 			config, err := tlsconfig.Get(hostname)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("getting tlsconfig: %v", err)
 			}
 
 			l, err = tls.Listen(conf.proto, conf.addr, config)

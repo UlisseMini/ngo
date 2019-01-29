@@ -131,7 +131,7 @@ func Test_connect(t *testing.T) {
 			t.Logf("Testing connect with: %#v", tc.conf)
 			conn, err := connect(tc.conf)
 			if err != nil {
-				t.Fatalf("connect returned: %v", err)
+				t.Fatalf("connect: %v", err)
 			}
 			defer conn.Close()
 
