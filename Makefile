@@ -1,12 +1,10 @@
-all: clean depends release
+all: clean depends test release
 
 clean:
 	@rm -rf bin
 
 depends:
-	@echo Downloading dependencies...
 	GO111MODULE=on go mod download
-	@echo Done.
 
 release:
 	@mkdir bin
