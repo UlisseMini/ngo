@@ -38,8 +38,9 @@ func parseArgs() config {
 		ssl    *bool = flag.Bool("ssl", false, "enable ssl")
 
 		// int options
-		timeoutFlag *time.Duration = flag.DurationP("timeout", "t", 10, "connection timeout in seconds")
-		debugLevel  *uint          = flag.UintP("debug", "d", 4, "logging level 0-6")
+		timeoutFlag *time.Duration = flag.DurationP("timeout", "t", 10*time.Second,
+			"connection timeout in seconds")
+		debugLevel *uint = flag.UintP("debug", "d", 4, "logging level 0-6")
 
 		// handled in main.go
 		cmdStr *string = flag.StringP("exec", "e", "",
