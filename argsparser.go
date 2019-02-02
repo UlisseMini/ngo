@@ -4,7 +4,8 @@ package main
 import (
 	// TODO find a better library for args parsing
 	// flag is utter trash :l
-	"errors"
+
+	"fmt"
 	"io"
 
 	log "github.com/sirupsen/logrus"
@@ -30,7 +31,9 @@ type config struct {
 	out io.Writer
 }
 
-func parseArgs() (config, error) {
+// return a config based on commandline arguments,
+// if commandline arguments are invalid it will call os.Exit(1)
+func parseArgs() config {
 	var (
 		// on/off options
 		listen *bool = flag.BoolP("listen", "l", false, "listen for connections")
@@ -38,13 +41,18 @@ func parseArgs() (config, error) {
 		ssl    *bool = flag.Bool("ssl", false, "enable ssl")
 
 		// int options
-		timeoutFlag *int  = flag.IntP("timeout", "t", 10, "connection timeout in seconds")
-		debugLevel  *uint = flag.UintP("debug", "d", 4, "logging level 0-6")
+		timeoutFlag *time.Duration = flag.DurationP("timeout", "t", 10, "connection timeout in seconds")
+		debugLevel  *uint          = flag.UintP("debug", "d", 4, "logging level 0-6")
 
 		// handled in main.go
 		cmdStr *string = flag.StringP("exec", "e", "",
 			"run command and redirect file descriptors to the connection")
 	)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s <ip:port> [flags...]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 
 	// instance of config
@@ -52,7 +60,8 @@ func parseArgs() (config, error) {
 
 	// TODO allow them to supply in another format other then ip:port
 	if len(flag.Args()) != 1 {
-		return config{}, errors.New("You must specify a host to connect to")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	// set addr to the first argument
@@ -63,7 +72,7 @@ func parseArgs() (config, error) {
 	}
 
 	// set the dial timeout
-	conf.timeout = time.Duration(*timeoutFlag) * time.Second
+	conf.timeout = *timeoutFlag
 
 	// set the logging levels
 	log.SetLevel(log.Level(*debugLevel))
@@ -77,5 +86,5 @@ func parseArgs() (config, error) {
 	conf.ssl = *ssl
 	conf.cmdStr = *cmdStr
 
-	return conf, nil
+	return conf
 }

@@ -17,11 +17,7 @@ const hostname = "ngo"
 
 func main() {
 	// Parse commandline arguments (argsparser.go)
-	conf, err := parseArgs()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	conf := parseArgs()
 
 	// connect
 	conn, err := connect(conf)
