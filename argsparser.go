@@ -2,9 +2,6 @@
 package main
 
 import (
-	// TODO find a better library for args parsing
-	// flag is utter trash :l
-
 	"fmt"
 	"io"
 
