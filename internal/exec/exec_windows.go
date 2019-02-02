@@ -13,7 +13,12 @@ func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) error {
 	cmd.Stderr = readwriter
 	cmd.Stdin = readwriter
 
-	cmd.Run()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 
+	if _, err := cmd.Process.Wait(); err != nil {
+		return err
+	}
 	return nil
 }

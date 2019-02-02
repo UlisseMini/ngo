@@ -1,14 +1,11 @@
 // +build !windows
 
-// exec is used for spawning processes with -e
-// will spawn using a pty if it can
 package exec
 
 import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
 	// Its very sad but i've gotta use this old ass library for pty's
 	// Hopefully i can figure out the syscalls later and do it myself
@@ -46,10 +43,4 @@ func Spawn(readwriter io.ReadWriter, cmd *exec.Cmd) (err error) {
 
 	// wait for one of them to finish then return possible error
 	return <-done
-}
-
-// Parse splits s into a list and creates an exec.Cmd using it.
-func Parse(s string) *exec.Cmd {
-	split := strings.Split(s, " ")
-	return exec.Command(split[0], split[1:]...)
 }
