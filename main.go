@@ -29,7 +29,7 @@ func main() {
 	if conf.cmdStr != "" {
 		log.Infof("executing: %q over the connection", conf.cmdStr)
 		cmd := exec.Parse(conf.cmdStr)
-		exec.Spawn(rw, cmd)
+		exec.Exec(cmd, rw)
 		return
 	}
 
