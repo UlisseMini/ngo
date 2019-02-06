@@ -6,11 +6,16 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"syscall"
 )
 
 // Exec execeutes a command over a stream (usually a net.Conn),
 // It will execute cmd inside a pty if possible.
 func Exec(cmd *exec.Cmd, conn io.ReadWriter) error {
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+
 	cmd.Stdout = conn
 	cmd.Stderr = conn
 	cmd.Stdin = conn
@@ -25,5 +30,5 @@ func Exec(cmd *exec.Cmd, conn io.ReadWriter) error {
 		return err
 	}
 
-	return err
+	return nil
 }
