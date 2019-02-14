@@ -41,12 +41,7 @@ func main() {
 	}()
 }
 
-func connect(conf config) (net.Conn, error) {
-	var (
-		err  error
-		conn net.Conn
-	)
-
+func connect(conf config) (conn net.Conn, err error) {
 	if !conf.listen {
 		if conf.ssl {
 			// connect with ssl / tls
