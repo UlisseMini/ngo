@@ -16,7 +16,7 @@ release:
 	CGO_ENABLED=0 GOOS=darwin go build $(LDFLAGS) -o bin/ngo_mac64
 
 upx:
-	upx --brute bin/*
+	upx --brute --best bin/*
 
 test:
 	@go test -race -cover ./...
